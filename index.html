@@ -330,9 +330,15 @@ async function addTextures(files){
   const imgs=Array.from(files).filter(f=>isImg(f.name));
   for(const f of imgs){
     const url=await readDataURL(f);
-    const key=f.name.toLowerCase();
-    const base=key.split('/').pop().split('\\').pop();
-    textureMap[key]=url; textureMap[base]=url;
+    // Store under multiple keys: full name, lowercase, basename only
+    const full=f.name.toLowerCase();
+    const base=full.split(/[/\\]/).pop();
+    const webkitBase=(f.webkitRelativePath||f.name).split(/[/\\]/).pop().toLowerCase();
+    textureMap[full]=url;
+    textureMap[base]=url;
+    textureMap[webkitBase]=url;
+    // also store without extension for fuzzy matching
+    textureMap[base.replace(/\.[^.]+$/,'')]=url;
   }
   return imgs.length;
 }
@@ -395,12 +401,35 @@ wrap.addEventListener('drop',e=>{e.preventDefault();registerFolder(e.dataTransfe
 function makeManager(){
   const m=new THREE.LoadingManager();
   m.setURLModifier(url=>{
-    const parts=url.split(/[/\\]/);
-    const base=decodeURIComponent(parts[parts.length-1]).toLowerCase();
+    // Try multiple forms of the filename
+    // 1. Full URL decoded basename
+    const decoded=decodeURIComponent(url);
+    const parts=decoded.split(/[/\\]/);
+    const base=parts[parts.length-1].toLowerCase();
+
     if(textureMap[base]) return textureMap[base];
-    // fuzzy match: same name different extension
+
+    // 2. Try with original encoding
+    const rawParts=url.split(/[/\\]/);
+    const rawBase=rawParts[rawParts.length-1].toLowerCase();
+    if(textureMap[rawBase]) return textureMap[rawBase];
+
+    // 3. Fuzzy: same stem, different extension
     const stem=base.replace(/\.[^.]+$/,'');
-    for(const k of Object.keys(textureMap)){if(k.replace(/\.[^.]+$/,'')=== stem) return textureMap[k];}
+    for(const k of Object.keys(textureMap)){
+      if(k.replace(/\.[^.]+$/,'')=== stem) return textureMap[k];
+    }
+
+    // 4. The MTL has paths like "YAMAHA實木質感-上傳網頁用/_85.jpg"
+    //    Three.js will request blob:xxx/YAMAHA實木質感-上傳網頁用/_85.jpg
+    //    We already stored just "_85.jpg" as key, so base match above should work.
+    //    Extra: try last segment after any slash in the map keys too
+    for(const k of Object.keys(textureMap)){
+      const kBase=k.split(/[/\\]/).pop();
+      if(kBase===base) return textureMap[k];
+    }
+
+    console.warn('Texture not found:', base);
     return url;
   });
   return m;
