@@ -448,7 +448,20 @@ function placeModel(obj, name){
   const box3=new THREE.Box3().setFromObject(obj);
   obj.position.y -= box3.min.y;
 
-  // NO shadows, but keep material as-is
+  // Fix double-sided + add edge lines
+  obj.traverse(c=>{
+    if(c.isMesh){
+      const mats=Array.isArray(c.material)?c.material:[c.material];
+      mats.forEach(m=>{
+        m.side=THREE.DoubleSide;
+        if(m.opacity<1) m.transparent=true;
+      });
+      // Edge outline
+      const edges=new THREE.EdgesGeometry(c.geometry, 15);
+      const line=new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0x1a1a1a, linewidth:1}));
+      c.add(line);
+    }
+  });
   scene.add(obj); loadedModel=obj;
   let mn=0,vn=0;
   obj.traverse(c=>{if(c.isMesh){mn++;if(c.geometry.attributes.position)vn+=c.geometry.attributes.position.count;}});
