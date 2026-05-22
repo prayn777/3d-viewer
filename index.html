@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YAMAHA MOTOR CAFÉ — 3D 模型預覽</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>3D Model Viewer</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
@@ -13,190 +13,245 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --red:#E60012;--gold:#C9A84C;--warm:#F5F0E8;
-  --panel:rgba(20,18,16,0.93);--border:rgba(201,168,76,0.28);
+  --gold:#C9A84C;--warm:#F5F0E8;
+  --panel:rgba(20,18,16,0.94);--border:rgba(201,168,76,0.28);
+  --topbar-h:52px;--bottombar-h:48px;
 }
-html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',sans-serif;overflow:hidden;color:#e8e0d0}
+html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',sans-serif;overflow:hidden;color:#e8e0d0;-webkit-tap-highlight-color:transparent;}
 
-/* topbar */
-#topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:14px;backdrop-filter:blur(12px)}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--red);flex-shrink:0}
-.subtitle{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);opacity:.8}
-.divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
-#filename-display{font-size:12px;color:rgba(232,224,208,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-#status-badge{font-size:10px;letter-spacing:1px;padding:3px 10px;border-radius:2px;border:1px solid var(--border);color:var(--gold);flex-shrink:0}
+/* ── Topbar ── */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:var(--topbar-h);
+  background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:10px;
+  backdrop-filter:blur(12px);
+}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#e8e0d0;flex-shrink:0}
+.divider{width:1px;height:22px;background:var(--border);flex-shrink:0}
+#filename-display{font-size:11px;color:rgba(232,224,208,.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#status-badge{font-size:10px;letter-spacing:1px;padding:3px 9px;border-radius:2px;border:1px solid var(--border);color:var(--gold);flex-shrink:0;white-space:nowrap}
 #status-badge.loaded{border-color:#4CAF50;color:#4CAF50}
 
-/* canvas */
-#canvas-wrap{position:fixed;top:52px;left:0;right:0;bottom:44px}
-#three-canvas{display:block;width:100%;height:100%}
+/* ── Canvas ── */
+#canvas-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:var(--bottombar-h);}
+#three-canvas{display:block;width:100%;height:100%;touch-action:none;}
 
-/* overlay */
-#drop-overlay{position:fixed;inset:0;z-index:200;background:rgba(10,9,7,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;overflow-y:auto;padding:20px 0;transition:opacity .35s ease}
+/* ── Bottom bar ── */
+#bottombar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:var(--bottombar-h);
+  background:var(--panel);border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;gap:0;
+  backdrop-filter:blur(12px);overflow:hidden;
+}
+/* desktop: hints */
+.hint-row{display:flex;align-items:center;gap:14px;flex:1}
+.ii{font-size:11px;color:rgba(232,224,208,.38);display:flex;align-items:center;gap:5px;white-space:nowrap}
+.ik{padding:1px 5px;border:1px solid rgba(201,168,76,.2);border-radius:2px;color:rgba(201,168,76,.6);font-size:10px;font-family:monospace}
+/* mobile: hint simplified */
+@media(max-width:600px){
+  .hint-row .ii:nth-child(n+3){display:none}
+  .ii{font-size:10px}
+  .ik{font-size:9px;padding:1px 4px}
+}
+#model-info{margin-left:auto;font-size:10px;color:rgba(232,224,208,.28);white-space:nowrap;flex-shrink:0}
+
+/* ── Floating action buttons ── */
+#fab-group{
+  position:fixed;right:12px;bottom:calc(var(--bottombar-h) + 12px);z-index:50;
+  display:none;flex-direction:column;gap:8px;
+}
+#fab-group.on{display:flex}
+
+.fab{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--panel);border:1px solid var(--border);
+  color:rgba(232,224,208,.7);font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .15s;
+  backdrop-filter:blur(12px);
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.fab:active{background:rgba(201,168,76,.2);border-color:var(--gold);transform:scale(0.93)}
+.fab.active{border-color:var(--gold);color:var(--gold)}
+
+/* ── View presets (left side) ── */
+#view-panel{
+  position:fixed;left:12px;bottom:calc(var(--bottombar-h) + 12px);z-index:50;
+  display:none;flex-direction:column;gap:6px;
+}
+#view-panel.on{display:flex}
+.vb{
+  background:var(--panel);border:1px solid var(--border);border-radius:22px;
+  color:rgba(232,224,208,.6);font-size:11px;letter-spacing:1px;
+  padding:8px 16px;cursor:pointer;transition:all .15s;
+  font-family:'Noto Sans TC',sans-serif;text-transform:uppercase;
+  backdrop-filter:blur(12px);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  min-height:36px;display:flex;align-items:center;justify-content:center;
+}
+.vb:active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1)}
+
+/* ── Settings drawer ── */
+#settings-drawer{
+  position:fixed;right:0;top:var(--topbar-h);bottom:var(--bottombar-h);z-index:60;
+  width:200px;
+  background:var(--panel);border-left:1px solid var(--border);
+  display:none;flex-direction:column;gap:0;
+  backdrop-filter:blur(16px);
+  transform:translateX(100%);transition:transform .25s ease;
+  overflow-y:auto;
+}
+#settings-drawer.open{display:flex;transform:translateX(0)}
+.dr-section{padding:14px 16px 8px}
+.dr-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.dr-btn{
+  width:100%;background:transparent;border:1px solid rgba(201,168,76,.18);border-radius:6px;
+  color:rgba(232,224,208,.7);font-size:13px;padding:10px 12px;
+  cursor:pointer;text-align:left;transition:all .15s;
+  font-family:'Noto Sans TC',sans-serif;margin-bottom:6px;
+  display:flex;align-items:center;gap:8px;
+  min-height:42px;
+  -webkit-tap-highlight-color:transparent;
+}
+.dr-btn:active{border-color:var(--gold);color:var(--warm);background:rgba(201,168,76,.1)}
+.dr-sep{height:1px;background:rgba(201,168,76,.12);margin:4px 16px}
+
+/* ── Upload overlay ── */
+#drop-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(10,9,7,0.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;overflow-y:auto;padding:70px 16px 20px;
+  transition:opacity .3s ease;
+}
 #drop-overlay.hidden{opacity:0;pointer-events:none}
 
-/* upload card */
-.upload-card{width:min(520px,92vw);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:28px;display:flex;flex-direction:column;gap:20px}
-.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--warm)}
+.upload-card{
+  width:min(500px,100%);
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  padding:22px 20px;display:flex;flex-direction:column;gap:16px;
+}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--warm)}
 .card-desc{font-size:12px;color:rgba(232,224,208,.5);line-height:1.8}
 .card-desc b{color:var(--gold);font-weight:500}
 
-/* file row */
-.file-row{display:flex;flex-direction:column;gap:8px}
-.file-slot{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(201,168,76,.15);border-radius:6px;background:rgba(255,255,255,.02);transition:border-color .2s}
+/* file slots */
+.file-slot{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;border:1px solid rgba(201,168,76,.15);border-radius:8px;
+  background:rgba(255,255,255,.02);transition:border-color .2s;
+}
 .file-slot.ready{border-color:rgba(76,175,80,.4);background:rgba(76,175,80,.04)}
-.file-slot.hover-active{border-color:var(--gold);background:rgba(201,168,76,.06)}
 .slot-left{flex:1;min-width:0}
-.slot-tag{display:inline-block;padding:2px 8px;border:1px solid var(--border);border-radius:3px;font-size:10px;letter-spacing:1px;color:var(--gold);margin-bottom:5px;font-family:monospace}
-.slot-tag.required{border-color:rgba(230,0,18,.4);color:#ff6b6b}
-.slot-filename{font-size:13px;color:var(--warm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slot-hint{font-size:11px;color:rgba(232,224,208,.35);margin-top:2px}
+.slot-tags{display:flex;gap:5px;margin-bottom:5px;flex-wrap:wrap}
+.slot-tag{padding:2px 7px;border:1px solid var(--border);border-radius:3px;font-size:10px;letter-spacing:.5px;color:var(--gold);font-family:monospace}
+.slot-tag.req{border-color:rgba(230,0,18,.35);color:#ff8080}
+.slot-filename{font-size:12px;color:var(--warm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot-hint{font-size:11px;color:rgba(232,224,208,.3);margin-top:2px}
+.slot-status{font-size:15px;margin-left:4px;flex-shrink:0}
 
-/* upload buttons */
+/* upload button */
 .slot-btn{flex-shrink:0;position:relative;overflow:hidden}
-.slot-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
-.slot-btn-inner{padding:7px 14px;border:1px solid rgba(201,168,76,.3);border-radius:4px;font-size:11px;color:rgba(232,224,208,.6);cursor:pointer;transition:all .15s;white-space:nowrap;display:block;font-family:'Noto Sans TC',sans-serif}
-.slot-btn:hover .slot-btn-inner{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08)}
-.slot-status{font-size:13px;margin-left:4px;flex-shrink:0}
+.slot-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;width:100%;height:100%}
+.slot-btn-inner{
+  padding:9px 14px;border:1px solid rgba(201,168,76,.3);border-radius:6px;
+  font-size:12px;color:rgba(232,224,208,.6);cursor:pointer;transition:all .15s;
+  white-space:nowrap;display:block;font-family:'Noto Sans TC',sans-serif;
+  min-height:38px;display:flex;align-items:center;
+}
+.slot-btn:active .slot-btn-inner{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.08)}
 
-/* drop zone */
-.drop-area{border:1.5px dashed rgba(201,168,76,.25);border-radius:6px;padding:16px;text-align:center;font-size:12px;color:rgba(232,224,208,.35);transition:all .2s;position:relative;cursor:pointer}
-.drop-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* drop area */
+.drop-area{
+  border:1.5px dashed rgba(201,168,76,.22);border-radius:8px;
+  padding:16px;text-align:center;font-size:12px;color:rgba(232,224,208,.35);
+  transition:all .2s;position:relative;cursor:pointer;
+  min-height:52px;display:flex;align-items:center;justify-content:center;
+}
+.drop-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .drop-area.over,.drop-area:hover{border-color:var(--gold);color:rgba(232,224,208,.6);background:rgba(201,168,76,.04)}
 
 /* load button */
-.load-btn{padding:12px;background:rgba(201,168,76,.12);border:1px solid var(--gold);border-radius:5px;color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:background .2s;width:100%}
-.load-btn:hover:not(:disabled){background:rgba(201,168,76,.22)}
+.load-btn{
+  padding:14px;background:rgba(201,168,76,.12);border:1px solid var(--gold);border-radius:8px;
+  color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;
+  cursor:pointer;transition:background .2s;width:100%;min-height:50px;
+  -webkit-tap-highlight-color:transparent;
+}
+.load-btn:active:not(:disabled){background:rgba(201,168,76,.25)}
 .load-btn:disabled{opacity:.3;cursor:not-allowed}
 
 /* tip */
-.tip{width:min(520px,92vw);background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.18);border-radius:6px;padding:14px 18px;font-size:11px;color:rgba(232,224,208,.55);line-height:1.9}
+.tip{
+  width:min(500px,100%);
+  background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.16);
+  border-radius:8px;padding:14px 16px;
+  font-size:11px;color:rgba(232,224,208,.5);line-height:1.9;
+}
 .tip b{color:var(--gold);font-weight:500}
 .tip code{background:rgba(201,168,76,.12);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--gold);font-family:monospace}
 
-/* controls */
-#ctrl-panel{position:fixed;right:14px;top:66px;z-index:50;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:10px;display:none;flex-direction:column;gap:3px;backdrop-filter:blur(12px);min-width:120px}
-#ctrl-panel.on{display:flex}
-.cl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:4px 0 2px;padding:0 4px}
-.cb{background:transparent;border:1px solid rgba(201,168,76,.18);border-radius:3px;color:rgba(232,224,208,.7);font-size:11px;padding:6px 10px;cursor:pointer;text-align:left;transition:all .15s;font-family:'Noto Sans TC',sans-serif}
-.cb:hover{border-color:var(--gold);color:var(--warm);background:rgba(201,168,76,.08)}
-.cs{height:1px;background:rgba(201,168,76,.15);margin:3px 0}
-
-#view-panel{position:fixed;left:14px;top:66px;z-index:50;display:none;flex-direction:column;gap:4px}
-#view-panel.on{display:flex}
-.vb{background:var(--panel);border:1px solid var(--border);border-radius:3px;color:rgba(232,224,208,.6);font-size:10px;letter-spacing:1px;padding:7px 14px;cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif;text-transform:uppercase;backdrop-filter:blur(12px)}
-.vb:hover{border-color:var(--gold);color:var(--gold)}
-
-/* infobar */
-#infobar{position:fixed;bottom:0;left:0;right:0;z-index:100;height:44px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:18px;backdrop-filter:blur(12px)}
-.ii{font-size:11px;color:rgba(232,224,208,.38);display:flex;align-items:center;gap:6px;white-space:nowrap}
-.ik{padding:1px 6px;border:1px solid rgba(201,168,76,.2);border-radius:2px;color:rgba(201,168,76,.6);font-size:10px;font-family:monospace}
-#model-info{margin-left:auto;font-size:11px;color:rgba(232,224,208,.3)}
-
-/* loading */
-#loading{position:fixed;inset:0;z-index:300;background:rgba(10,9,7,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+/* ── Loading ── */
+#loading{
+  position:fixed;inset:0;z-index:300;background:rgba(10,9,7,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
 #loading.on{display:flex}
 .lt{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--warm)}
-.pb{width:260px;height:2px;background:rgba(201,168,76,.18);border-radius:1px;overflow:hidden}
+.pb{width:min(260px,70vw);height:2px;background:rgba(201,168,76,.18);border-radius:1px;overflow:hidden}
 .pf{height:100%;background:var(--gold);width:0%;transition:width .25s ease;border-radius:1px}
 .lp{font-size:11px;color:var(--gold);letter-spacing:2px}
 
-/* toast */
-#toast{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);background:rgba(230,0,18,.14);border:1px solid rgba(230,0,18,.35);color:#ff6b6b;padding:10px 22px;border-radius:4px;font-size:12px;z-index:500;display:none;max-width:440px;text-align:center}
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:calc(var(--bottombar-h) + 12px);left:50%;transform:translateX(-50%);
+  background:rgba(20,18,16,.95);border:1px solid rgba(230,0,18,.35);
+  color:#ff8080;padding:10px 20px;border-radius:6px;
+  font-size:12px;z-index:500;display:none;
+  max-width:min(400px,85vw);text-align:center;
+  backdrop-filter:blur(12px);
+}
 #toast.on{display:block}
+
+/* ── Settings overlay backdrop ── */
+#drawer-bg{
+  position:fixed;inset:0;z-index:55;
+  background:rgba(0,0,0,.3);
+  display:none;
+}
+#drawer-bg.on{display:block}
 </style>
 </head>
 <body>
 
+<!-- Topbar -->
 <div id="topbar">
-  <div class="logo">YAMAHA</div>
-  <div class="subtitle">Motor Café · 3D Viewer</div>
+  <div class="logo">3D Viewer</div>
   <div class="divider"></div>
   <div id="filename-display">尚未載入模型</div>
   <div id="status-badge">等待載入</div>
 </div>
 
+<!-- Canvas -->
 <div id="canvas-wrap">
   <canvas id="three-canvas"></canvas>
 </div>
 
-<!-- ── Upload Overlay ── -->
-<div id="drop-overlay">
-  <div class="upload-card">
-    <div>
-      <div class="card-title">上傳 3D 模型檔案</div>
-      <div class="card-desc" style="margin-top:6px">
-        從 SketchUp 匯出的 <b>.obj</b> 與 <b>.mtl</b> 各別點擊選取，<br>
-        或直接將兩個檔案一起拖曳到下方區域
-      </div>
-    </div>
-
-    <div class="file-row">
-      <!-- OBJ slot -->
-      <div class="file-slot" id="slot-obj">
-        <div class="slot-left">
-          <div><span class="slot-tag required">必要</span> <span class="slot-tag">.OBJ</span></div>
-          <div class="slot-filename" id="obj-filename">尚未選取</div>
-          <div class="slot-hint">幾何形狀檔案（SketchUp 匯出的主檔）</div>
-        </div>
-        <div class="slot-status" id="obj-status">⊙</div>
-        <div class="slot-btn">
-          <input type="file" accept=".obj" id="input-obj" />
-          <div class="slot-btn-inner">選取檔案</div>
-        </div>
-      </div>
-
-      <!-- MTL slot -->
-      <div class="file-slot" id="slot-mtl">
-        <div class="slot-left">
-          <div><span class="slot-tag" style="border-color:rgba(201,168,76,.3);color:rgba(201,168,76,.6)">可選</span> <span class="slot-tag">.MTL</span></div>
-          <div class="slot-filename" id="mtl-filename">尚未選取（無材質色）</div>
-          <div class="slot-hint">材質顏色檔案（與 .obj 同名，同資料夾）</div>
-        </div>
-        <div class="slot-status" id="mtl-status">—</div>
-        <div class="slot-btn">
-          <input type="file" accept=".mtl" id="input-mtl" />
-          <div class="slot-btn-inner">選取檔案</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- drag both at once -->
-    <div class="drop-area" id="drop-area">
-      <input type="file" accept=".obj,.mtl,.glb,.gltf" multiple id="input-multi" />
-      📂 &nbsp;或將 OBJ + MTL 兩個檔案同時拖曳至此
-    </div>
-
-    <button class="load-btn" id="load-btn" disabled onclick="startLoad()">
-      載入 3D 模型
-    </button>
+<!-- Bottom bar -->
+<div id="bottombar">
+  <div class="hint-row">
+    <div class="ii"><span class="ik">拖曳</span>旋轉</div>
+    <div class="ii"><span class="ik">右鍵</span>平移</div>
+    <div class="ii"><span class="ik">滾輪</span>縮放</div>
+    <div class="ii"><span class="ik">雙擊</span>對焦</div>
   </div>
-
-  <div class="tip">
-    <b>SketchUp 匯出步驟：</b>
-    檔案 → 匯出 → 3D 模型 → 格式選 <code>.obj</code> → 匯出<br>
-    匯出後會產生 <code>模型名稱.obj</code> 和 <code>模型名稱.mtl</code> 兩個檔案<br>
-    <b>兩個都選取 → 顏色完整；只選 .obj → 灰色模型</b>
-  </div>
+  <div id="model-info"></div>
 </div>
 
-<!-- Controls -->
-<div id="ctrl-panel">
-  <div class="cl">視角</div>
-  <button class="cb" onclick="resetCamera()">⟳ 重置視角</button>
-  <button class="cb" onclick="toggleAutoRotate()" id="rotate-btn">◎ 自動旋轉</button>
-  <div class="cs"></div>
-  <div class="cl">背景</div>
-  <button class="cb" onclick="setBg('dark')">● 深色</button>
-  <button class="cb" onclick="setBg('light')">○ 淺色</button>
-  <button class="cb" onclick="setBg('studio')">◈ 工作室</button>
-  <div class="cs"></div>
-  <div class="cl">其他</div>
-  <button class="cb" onclick="toggleWireframe()">⊞ 線框模式</button>
-  <div class="cs"></div>
-  <button class="cb" onclick="unloadModel()">↑ 換檔案</button>
-</div>
-
+<!-- View presets (left) -->
 <div id="view-panel">
   <button class="vb" onclick="setView('front')">正面</button>
   <button class="vb" onclick="setView('side')">側面</button>
@@ -205,14 +260,95 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
   <button class="vb" onclick="setView('iso')">等角</button>
 </div>
 
-<div id="infobar">
-  <div class="ii"><span class="ik">拖曳</span>旋轉</div>
-  <div class="ii"><span class="ik">右鍵</span>平移</div>
-  <div class="ii"><span class="ik">滾輪</span>縮放</div>
-  <div class="ii"><span class="ik">雙擊</span>對焦</div>
-  <div id="model-info"></div>
+<!-- FAB group (right) -->
+<div id="fab-group">
+  <div class="fab" id="fab-settings" onclick="toggleDrawer()" title="設定">⚙</div>
+  <div class="fab" id="fab-rotate"   onclick="toggleAutoRotate()" title="自動旋轉">◎</div>
+  <div class="fab" id="fab-reset"    onclick="resetCamera()" title="重置視角">⟳</div>
+  <div class="fab" id="fab-upload"   onclick="unloadModel()" title="換檔案">↑</div>
 </div>
 
+<!-- Settings drawer -->
+<div id="drawer-bg" onclick="closeDrawer()"></div>
+<div id="settings-drawer">
+  <div class="dr-section">
+    <div class="dr-label">背景</div>
+    <button class="dr-btn" onclick="setBg('dark');closeDrawer()">● 深色</button>
+    <button class="dr-btn" onclick="setBg('light');closeDrawer()">○ 淺色</button>
+    <button class="dr-btn" onclick="setBg('studio');closeDrawer()">◈ 工作室</button>
+  </div>
+  <div class="dr-sep"></div>
+  <div class="dr-section">
+    <div class="dr-label">顯示</div>
+    <button class="dr-btn" onclick="toggleWireframe();closeDrawer()">⊞ 線框模式</button>
+  </div>
+</div>
+
+<!-- Upload overlay -->
+<div id="drop-overlay">
+  <div class="upload-card">
+    <div>
+      <div class="card-title">上傳 3D 模型</div>
+      <div class="card-desc" style="margin-top:6px">
+        選取 SketchUp 匯出的 <b>.obj</b> 與 <b>.mtl</b> 檔案，<br>
+        或直接將兩個檔案一起拖曳到下方
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <!-- OBJ -->
+      <div class="file-slot" id="slot-obj">
+        <div class="slot-left">
+          <div class="slot-tags">
+            <span class="slot-tag req">必要</span>
+            <span class="slot-tag">.OBJ</span>
+          </div>
+          <div class="slot-filename" id="obj-filename">尚未選取</div>
+          <div class="slot-hint">幾何形狀</div>
+        </div>
+        <div class="slot-status" id="obj-status">⊙</div>
+        <div class="slot-btn">
+          <input type="file" accept=".obj" id="input-obj" />
+          <div class="slot-btn-inner">選取</div>
+        </div>
+      </div>
+      <!-- MTL -->
+      <div class="file-slot" id="slot-mtl">
+        <div class="slot-left">
+          <div class="slot-tags">
+            <span class="slot-tag" style="color:rgba(201,168,76,.5)">可選</span>
+            <span class="slot-tag">.MTL</span>
+          </div>
+          <div class="slot-filename" id="mtl-filename">尚未選取（無顏色）</div>
+          <div class="slot-hint">材質顏色</div>
+        </div>
+        <div class="slot-status" id="mtl-status">—</div>
+        <div class="slot-btn">
+          <input type="file" accept=".mtl" id="input-mtl" />
+          <div class="slot-btn-inner">選取</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- drag both -->
+    <div class="drop-area" id="drop-area">
+      <input type="file" accept=".obj,.mtl,.glb,.gltf" multiple id="input-multi" />
+      📂 &nbsp;兩個檔案同時拖曳至此
+    </div>
+
+    <button class="load-btn" id="load-btn" disabled onclick="startLoad()">
+      載入 3D 模型
+    </button>
+  </div>
+
+  <div class="tip">
+    <b>SketchUp 匯出步驟：</b><br>
+    檔案 → 匯出 → 3D 模型 → 格式選 <code>.obj</code><br>
+    會產生 <code>.obj</code> 和 <code>.mtl</code> 兩個檔案，<b>兩個都選才有顏色</b>
+  </div>
+</div>
+
+<!-- Loading -->
 <div id="loading">
   <div class="lt">載入模型中…</div>
   <div class="pb"><div class="pf" id="pf"></div></div>
@@ -245,6 +381,10 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.minDistance = 0.2;
 controls.maxDistance = 300;
+controls.touches = {
+  ONE: THREE.TOUCH.ROTATE,
+  TWO: THREE.TOUCH.DOLLY_PAN
+};
 
 // Lights
 scene.add(new THREE.AmbientLight(0xfff8f0, 0.65));
@@ -252,8 +392,8 @@ const sun = new THREE.DirectionalLight(0xfff5e4, 2.0);
 sun.position.set(8, 12, 6);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.left = -15; sun.shadow.camera.right = 15;
-sun.shadow.camera.top  =  15; sun.shadow.camera.bottom= -15;
+sun.shadow.camera.left=-15;sun.shadow.camera.right=15;
+sun.shadow.camera.top=15;sun.shadow.camera.bottom=-15;
 sun.shadow.bias = -0.001;
 scene.add(sun);
 const fill = new THREE.DirectionalLight(0xe0eeff, 0.45);
@@ -273,250 +413,200 @@ function resize() {
 resize();
 window.addEventListener('resize', resize);
 
-let autoRot = false, wireMod = false, loadedModel = null;
-(function animate() {
+let autoRot=false, wireMod=false, loadedModel=null;
+(function animate(){
   requestAnimationFrame(animate);
-  if (autoRot && loadedModel) loadedModel.rotation.y += 0.003;
+  if(autoRot && loadedModel) loadedModel.rotation.y += 0.003;
   controls.update();
   renderer.render(scene, camera);
 })();
 
-// ── File state ────────────────────────────────────────────────
-// Store file objects directly — no blob URLs needed for MTLLoader
-// We use FileReader to read MTL content as text, pass via data URL
-let fileObj = null;   // File object for .obj
-let fileMtl = null;   // File object for .mtl
-let fileGlb = null;   // File object for .glb/.gltf
-
-const overlay     = document.getElementById('drop-overlay');
-const ctrlPanel   = document.getElementById('ctrl-panel');
-const viewPanel   = document.getElementById('view-panel');
-const loadingEl   = document.getElementById('loading');
-const pfEl        = document.getElementById('pf');
-const lpEl        = document.getElementById('lp');
-const filenameEl  = document.getElementById('filename-display');
-const badgeEl     = document.getElementById('status-badge');
-const modelInfoEl = document.getElementById('model-info');
-const toastEl     = document.getElementById('toast');
-const loadBtn     = document.getElementById('load-btn');
+// ── UI refs ───────────────────────────────────────────────────
+const overlay    = document.getElementById('drop-overlay');
+const loadingEl  = document.getElementById('loading');
+const pfEl       = document.getElementById('pf');
+const lpEl       = document.getElementById('lp');
+const filenameEl = document.getElementById('filename-display');
+const badgeEl    = document.getElementById('status-badge');
+const modelInfoEl= document.getElementById('model-info');
+const toastEl    = document.getElementById('toast');
+const loadBtn    = document.getElementById('load-btn');
+const fabGroup   = document.getElementById('fab-group');
+const viewPanel  = document.getElementById('view-panel');
 
 function showToast(msg) {
-  toastEl.textContent = msg;
-  toastEl.classList.add('on');
-  setTimeout(() => toastEl.classList.remove('on'), 5000);
+  toastEl.textContent=msg; toastEl.classList.add('on');
+  setTimeout(()=>toastEl.classList.remove('on'),5000);
 }
-function setPct(p) { pfEl.style.width=p+'%'; lpEl.textContent=Math.round(p)+'%'; }
+function setPct(p){ pfEl.style.width=p+'%'; lpEl.textContent=Math.round(p)+'%'; }
 
-function updateUI() {
-  // OBJ slot
-  const slotObj = document.getElementById('slot-obj');
-  const objFn   = document.getElementById('obj-filename');
-  const objSt   = document.getElementById('obj-status');
-  if (fileGlb) {
-    objFn.textContent = fileGlb.name;
-    objSt.textContent = '✓'; objSt.style.color = '#4CAF50';
+// ── Drawer ────────────────────────────────────────────────────
+const drawer   = document.getElementById('settings-drawer');
+const drawerBg = document.getElementById('drawer-bg');
+function toggleDrawer(){
+  const open = drawer.classList.toggle('open');
+  drawerBg.classList.toggle('on', open);
+}
+function closeDrawer(){
+  drawer.classList.remove('open');
+  drawerBg.classList.remove('on');
+}
+
+// ── File state ────────────────────────────────────────────────
+let fileObj=null, fileMtl=null, fileGlb=null;
+
+function updateUI(){
+  const slotObj=document.getElementById('slot-obj');
+  const objFn=document.getElementById('obj-filename');
+  const objSt=document.getElementById('obj-status');
+  const slotMtl=document.getElementById('slot-mtl');
+  const mtlFn=document.getElementById('mtl-filename');
+  const mtlSt=document.getElementById('mtl-status');
+
+  if(fileGlb){
+    objFn.textContent=fileGlb.name; objSt.textContent='✓'; objSt.style.color='#4CAF50';
     slotObj.classList.add('ready');
-    document.getElementById('mtl-filename').textContent = '（GLB 已內含材質）';
-    document.getElementById('mtl-status').textContent = '—';
-    document.getElementById('slot-mtl').classList.remove('ready');
-    loadBtn.disabled = false;
-    return;
+    mtlFn.textContent='（GLB 已內含材質）'; mtlSt.textContent='—'; mtlSt.style.color='';
+    slotMtl.classList.remove('ready');
+    loadBtn.disabled=false; return;
   }
-  if (fileObj) {
-    objFn.textContent = fileObj.name;
-    objSt.textContent = '✓'; objSt.style.color = '#4CAF50';
-    slotObj.classList.add('ready');
-    loadBtn.disabled = false;
+  if(fileObj){
+    objFn.textContent=fileObj.name; objSt.textContent='✓'; objSt.style.color='#4CAF50';
+    slotObj.classList.add('ready'); loadBtn.disabled=false;
   } else {
-    objFn.textContent = '尚未選取';
-    objSt.textContent = '⊙'; objSt.style.color = '';
-    slotObj.classList.remove('ready');
-    loadBtn.disabled = true;
+    objFn.textContent='尚未選取'; objSt.textContent='⊙'; objSt.style.color='';
+    slotObj.classList.remove('ready'); loadBtn.disabled=true;
   }
-  const slotMtl = document.getElementById('slot-mtl');
-  const mtlFn   = document.getElementById('mtl-filename');
-  const mtlSt   = document.getElementById('mtl-status');
-  if (fileMtl) {
-    mtlFn.textContent = fileMtl.name;
-    mtlSt.textContent = '✓'; mtlSt.style.color = '#4CAF50';
+  if(fileMtl){
+    mtlFn.textContent=fileMtl.name; mtlSt.textContent='✓'; mtlSt.style.color='#4CAF50';
     slotMtl.classList.add('ready');
   } else {
-    mtlFn.textContent = '尚未選取（無材質色）';
-    mtlSt.textContent = '—'; mtlSt.style.color = '';
+    mtlFn.textContent='尚未選取（無顏色）'; mtlSt.textContent='—'; mtlSt.style.color='';
     slotMtl.classList.remove('ready');
   }
 }
 
-function registerFiles(files) {
-  Array.from(files).forEach(f => {
-    const n = f.name.toLowerCase();
-    if (n.endsWith('.glb')||n.endsWith('.gltf')) { fileGlb=f; fileObj=null; fileMtl=null; }
-    else if (n.endsWith('.obj')) { fileObj=f; fileGlb=null; }
-    else if (n.endsWith('.mtl')) { fileMtl=f; fileGlb=null; }
+function registerFiles(files){
+  Array.from(files).forEach(f=>{
+    const n=f.name.toLowerCase();
+    if(n.endsWith('.glb')||n.endsWith('.gltf')){fileGlb=f;fileObj=null;fileMtl=null;}
+    else if(n.endsWith('.obj')){fileObj=f;fileGlb=null;}
+    else if(n.endsWith('.mtl')){fileMtl=f;fileGlb=null;}
     else showToast('不支援的格式：'+f.name);
   });
   updateUI();
 }
 
-// Individual file inputs
-document.getElementById('input-obj').addEventListener('change', e => { if(e.target.files[0]){fileObj=e.target.files[0];fileGlb=null;updateUI();} });
-document.getElementById('input-mtl').addEventListener('change', e => { if(e.target.files[0]){fileMtl=e.target.files[0];fileGlb=null;updateUI();} });
-document.getElementById('input-multi').addEventListener('change', e => registerFiles(e.target.files));
+document.getElementById('input-obj').addEventListener('change',e=>{if(e.target.files[0]){fileObj=e.target.files[0];fileGlb=null;updateUI();}});
+document.getElementById('input-mtl').addEventListener('change',e=>{if(e.target.files[0]){fileMtl=e.target.files[0];fileGlb=null;updateUI();}});
+document.getElementById('input-multi').addEventListener('change',e=>registerFiles(e.target.files));
 
-// Drag onto drop area
-const da = document.getElementById('drop-area');
-['dragenter','dragover'].forEach(ev => da.addEventListener(ev, e=>{e.preventDefault();da.classList.add('over');}));
-['dragleave','drop'].forEach(ev => da.addEventListener(ev, e=>{e.preventDefault();da.classList.remove('over');}));
-da.addEventListener('drop', e => registerFiles(e.dataTransfer.files));
+const da=document.getElementById('drop-area');
+['dragenter','dragover'].forEach(ev=>da.addEventListener(ev,e=>{e.preventDefault();da.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>da.addEventListener(ev,e=>{e.preventDefault();da.classList.remove('over');}));
+da.addEventListener('drop',e=>registerFiles(e.dataTransfer.files));
 
-// Drag onto canvas (when already loaded)
-wrap.addEventListener('dragover', e=>e.preventDefault());
-wrap.addEventListener('drop', e=>{e.preventDefault();registerFiles(e.dataTransfer.files);});
+wrap.addEventListener('dragover',e=>e.preventDefault());
+wrap.addEventListener('drop',e=>{e.preventDefault();registerFiles(e.dataTransfer.files);});
 
 // ── Load helpers ──────────────────────────────────────────────
-function readFileAsText(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = e => resolve(e.target.result);
-    fr.onerror = reject;
-    fr.readAsText(file);
-  });
-}
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = e => resolve(e.target.result);
-    fr.onerror = reject;
-    fr.readAsDataURL(file);
-  });
-}
-function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const fr = new FileReader();
-    fr.onload = e => resolve(e.target.result);
-    fr.onerror = reject;
-    fr.readAsArrayBuffer(file);
-  });
-}
+function readText(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsText(f);});}
+function readBuf(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsArrayBuffer(f);});}
 
-function placeModel(obj, name) {
-  if (loadedModel) { scene.remove(loadedModel); loadedModel=null; }
-  const box = new THREE.Box3().setFromObject(obj);
-  const size = box.getSize(new THREE.Vector3());
-  obj.scale.setScalar(4.0 / Math.max(size.x, size.y, size.z));
-  const box2 = new THREE.Box3().setFromObject(obj);
-  const c2 = box2.getCenter(new THREE.Vector3());
-  obj.position.sub(c2);
-  obj.position.y -= box2.min.y;
-  obj.traverse(c => { if(c.isMesh){c.castShadow=true;c.receiveShadow=true;} });
-  scene.add(obj); loadedModel = obj;
+function placeModel(obj, name){
+  if(loadedModel){scene.remove(loadedModel);loadedModel=null;}
+  const box=new THREE.Box3().setFromObject(obj);
+  const size=box.getSize(new THREE.Vector3());
+  obj.scale.setScalar(4.0/Math.max(size.x,size.y,size.z));
+  const box2=new THREE.Box3().setFromObject(obj);
+  const c2=box2.getCenter(new THREE.Vector3());
+  obj.position.sub(c2); obj.position.y-=box2.min.y;
+  obj.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+  scene.add(obj); loadedModel=obj;
   let mn=0,vn=0;
-  obj.traverse(c => { if(c.isMesh){mn++;if(c.geometry.attributes.position)vn+=c.geometry.attributes.position.count;} });
-  modelInfoEl.textContent = mn+' 個網格 · '+vn.toLocaleString()+' 頂點';
+  obj.traverse(c=>{if(c.isMesh){mn++;if(c.geometry.attributes.position)vn+=c.geometry.attributes.position.count;}});
+  modelInfoEl.textContent=mn+' 網格 · '+vn.toLocaleString()+' 頂點';
   loadingEl.classList.remove('on');
   overlay.classList.add('hidden');
-  ctrlPanel.classList.add('on'); viewPanel.classList.add('on');
-  filenameEl.textContent = name;
-  badgeEl.textContent = '已載入'; badgeEl.classList.add('loaded');
+  fabGroup.classList.add('on');
+  viewPanel.classList.add('on');
+  filenameEl.textContent=name;
+  badgeEl.textContent='已載入'; badgeEl.classList.add('loaded');
   resetCamera();
 }
 
-async function startLoad() {
+async function startLoad(){
   loadingEl.classList.add('on'); setPct(5);
-
-  try {
-    if (fileGlb) {
-      // GLB via ArrayBuffer → parse with GLTFLoader
-      const buf = await readFileAsArrayBuffer(fileGlb);
-      setPct(60);
-      const loader = new THREE.GLTFLoader();
-      loader.parse(buf, '', gltf => { setPct(100); placeModel(gltf.scene, fileGlb.name); },
-        err => { loadingEl.classList.remove('on'); showToast('GLB 解析失敗：'+(err.message||'未知錯誤')); });
+  try{
+    if(fileGlb){
+      const buf=await readBuf(fileGlb); setPct(60);
+      new THREE.GLTFLoader().parse(buf,'',gltf=>{setPct(100);placeModel(gltf.scene,fileGlb.name);},
+        err=>{loadingEl.classList.remove('on');showToast('GLB 解析失敗：'+(err.message||'未知'));});
       return;
     }
-
-    if (fileObj) {
-      let materials = null;
-
-      if (fileMtl) {
-        // Read MTL as text, then parse
+    if(fileObj){
+      let materials=null;
+      if(fileMtl){
         setPct(20);
-        const mtlText = await readFileAsText(fileMtl);
-        setPct(35);
-
-        // MTLLoader can parse from a string via a data URL workaround
-        const mtlLoader = new THREE.MTLLoader();
-        // Set resource path to empty so texture references don't break
-        mtlLoader.setResourcePath('');
-        // Use the manager to intercept texture loads (graceful skip)
-        const manager = new THREE.LoadingManager();
-        manager.onError = url => console.warn('Texture not found (skipped):', url);
-        mtlLoader.manager = manager;
-
-        // Parse MTL by loading via blob URL
-        const mtlBlob = new Blob([mtlText], {type:'text/plain'});
-        const mtlUrl  = URL.createObjectURL(mtlBlob);
-        await new Promise(resolve => {
-          mtlLoader.load(mtlUrl, mats => {
-            mats.preload(); materials = mats;
-            URL.revokeObjectURL(mtlUrl); resolve();
-          }, null, () => { URL.revokeObjectURL(mtlUrl); resolve(); });
+        const mtlText=await readText(fileMtl); setPct(35);
+        const mtlBlob=new Blob([mtlText],{type:'text/plain'});
+        const mtlUrl=URL.createObjectURL(mtlBlob);
+        const ml=new THREE.MTLLoader();
+        ml.setResourcePath('');
+        await new Promise(res=>{
+          ml.load(mtlUrl,mats=>{mats.preload();materials=mats;URL.revokeObjectURL(mtlUrl);res();},
+            null,()=>{URL.revokeObjectURL(mtlUrl);res();});
         });
         setPct(55);
       }
-
-      // Read OBJ as text, parse via blob URL
       setPct(60);
-      const objText = await readFileAsText(fileObj);
-      const objBlob = new Blob([objText], {type:'text/plain'});
-      const objUrl  = URL.createObjectURL(objBlob);
-
-      const objLoader = new THREE.OBJLoader();
-      if (materials) objLoader.setMaterials(materials);
-
-      await new Promise(resolve => {
-        objLoader.load(objUrl, obj => {
-          setPct(100);
-          placeModel(obj, fileObj.name);
-          URL.revokeObjectURL(objUrl); resolve();
-        }, xhr => { if(xhr.total) setPct(60+xhr.loaded/xhr.total*40); },
-        err => { loadingEl.classList.remove('on'); showToast('OBJ 載入失敗：'+(err.message||'未知錯誤')); URL.revokeObjectURL(objUrl); resolve(); });
+      const objText=await readText(fileObj);
+      const objBlob=new Blob([objText],{type:'text/plain'});
+      const objUrl=URL.createObjectURL(objBlob);
+      const ol=new THREE.OBJLoader();
+      if(materials)ol.setMaterials(materials);
+      await new Promise(res=>{
+        ol.load(objUrl,obj=>{setPct(100);placeModel(obj,fileObj.name);URL.revokeObjectURL(objUrl);res();},
+          xhr=>{if(xhr.total)setPct(60+xhr.loaded/xhr.total*40);},
+          err=>{loadingEl.classList.remove('on');showToast('OBJ 載入失敗：'+(err.message||'未知'));URL.revokeObjectURL(objUrl);res();});
       });
     }
-  } catch(e) {
-    loadingEl.classList.remove('on');
-    showToast('載入失敗：'+e.message);
-    console.error(e);
-  }
+  }catch(e){loadingEl.classList.remove('on');showToast('載入失敗：'+e.message);console.error(e);}
 }
 
-// ── Scene controls ────────────────────────────────────────────
-function resetCamera() { camera.position.set(5,3,7); controls.target.set(0,0,0); controls.update(); }
-function toggleAutoRotate() {
-  autoRot = !autoRot;
-  document.getElementById('rotate-btn').style.color = autoRot ? 'var(--gold)' : '';
+// ── Controls ─────────────────────────────────────────────────
+function resetCamera(){camera.position.set(5,3,7);controls.target.set(0,0,0);controls.update();}
+
+function toggleAutoRotate(){
+  autoRot=!autoRot;
+  document.getElementById('fab-rotate').classList.toggle('active',autoRot);
 }
-function setBg(m) {
-  scene.background = new THREE.Color({dark:0x141210,light:0xf0ece4,studio:0x232120}[m]);
+
+function setBg(m){
+  scene.background=new THREE.Color({dark:0x141210,light:0xf0ece4,studio:0x232120}[m]);
 }
-function toggleWireframe() {
-  wireMod = !wireMod;
-  if(loadedModel) loadedModel.traverse(c => {
+
+function toggleWireframe(){
+  wireMod=!wireMod;
+  if(loadedModel)loadedModel.traverse(c=>{
     if(c.isMesh)(Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.wireframe=wireMod);
   });
 }
-function unloadModel() {
+
+function unloadModel(){
   overlay.classList.remove('hidden');
-  ctrlPanel.classList.remove('on'); viewPanel.classList.remove('on');
+  fabGroup.classList.remove('on'); viewPanel.classList.remove('on');
   badgeEl.textContent='等待載入'; badgeEl.classList.remove('loaded');
   filenameEl.textContent='尚未載入模型'; modelInfoEl.textContent='';
-  fileObj=fileMtl=fileGlb=null; updateUI();
+  fileObj=fileMtl=fileGlb=null; updateUI(); closeDrawer();
 }
-const VP = { front:[[0,2,8],[0,0,0]], side:[[8,2,0],[0,0,0]], rear:[[0,2,-8],[0,0,0]], top:[[0,10,.01],[0,0,0]], iso:[[5,4,6],[0,0,0]] };
-function setView(p) { if(!VP[p])return; camera.position.set(...VP[p][0]); controls.target.set(...VP[p][1]); controls.update(); }
 
-canvas.addEventListener('dblclick', e => {
-  if(!loadedModel) return;
+const VP={front:[[0,2,8],[0,0,0]],side:[[8,2,0],[0,0,0]],rear:[[0,2,-8],[0,0,0]],top:[[0,10,.01],[0,0,0]],iso:[[5,4,6],[0,0,0]]};
+function setView(p){if(!VP[p])return;camera.position.set(...VP[p][0]);controls.target.set(...VP[p][1]);controls.update();}
+
+// Double-tap / double-click focus
+canvas.addEventListener('dblclick',e=>{
+  if(!loadedModel)return;
   const r=canvas.getBoundingClientRect();
   const ray=new THREE.Raycaster();
   ray.setFromCamera(new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1),camera);
