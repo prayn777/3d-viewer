@@ -10,111 +10,117 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/MTLLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#C9A84C;--warm:#F5F0E8;
-  --panel:rgba(20,18,16,0.94);--border:rgba(201,168,76,0.28);
-  --topbar-h:52px;--bottombar-h:48px;
+  --topbar-h:48px;
+  --bottombar-h:44px;
+  --accent:#555;
+  --border:#ddd;
 }
-html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',sans-serif;overflow:hidden;color:#e8e0d0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;background:#f0ece4;font-family:'Noto Sans TC',sans-serif;overflow:hidden;color:#333;-webkit-tap-highlight-color:transparent}
 
-#topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--topbar-h);background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;backdrop-filter:blur(12px)}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#e8e0d0;flex-shrink:0}
-.divider{width:1px;height:22px;background:var(--border);flex-shrink:0}
-#filename-display{font-size:11px;color:rgba(232,224,208,.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
-#status-badge{font-size:10px;letter-spacing:1px;padding:3px 9px;border-radius:2px;border:1px solid var(--border);color:var(--gold);flex-shrink:0;white-space:nowrap}
-#status-badge.loaded{border-color:#4CAF50;color:#4CAF50}
+/* topbar */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px}
+.logo{font-size:13px;font-weight:500;color:#333;flex-shrink:0;letter-spacing:.5px}
+.div{width:1px;height:18px;background:var(--border);flex-shrink:0}
+#filename-display{font-size:11px;color:#999;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#status-badge{font-size:10px;padding:2px 8px;border-radius:2px;border:1px solid var(--border);color:#999;flex-shrink:0;white-space:nowrap}
+#status-badge.loaded{border-color:#4CAF50;color:#4CAF50;background:#f0fff0}
 
-#canvas-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:var(--bottombar-h)}
+/* canvas — white background */
+#canvas-wrap{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:var(--bottombar-h);background:#f0ece4}
 #three-canvas{display:block;width:100%;height:100%;touch-action:none}
 
-#bottombar{position:fixed;bottom:0;left:0;right:0;z-index:100;height:var(--bottombar-h);background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:0;backdrop-filter:blur(12px);overflow:hidden}
-.hint-row{display:flex;align-items:center;gap:14px;flex:1}
-.ii{font-size:11px;color:rgba(232,224,208,.38);display:flex;align-items:center;gap:5px;white-space:nowrap}
-.ik{padding:1px 5px;border:1px solid rgba(201,168,76,.2);border-radius:2px;color:rgba(201,168,76,.6);font-size:10px;font-family:monospace}
-@media(max-width:600px){.hint-row .ii:nth-child(n+3){display:none}.ii{font-size:10px}.ik{font-size:9px;padding:1px 4px}}
-#model-info{margin-left:auto;font-size:10px;color:rgba(232,224,208,.28);white-space:nowrap;flex-shrink:0}
+/* bottombar */
+#bottombar{position:fixed;bottom:0;left:0;right:0;z-index:100;height:var(--bottombar-h);background:#fff;border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:16px}
+.ii{font-size:11px;color:#aaa;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.ik{padding:1px 5px;border:1px solid #ddd;border-radius:2px;color:#888;font-size:10px;font-family:monospace;background:#fafafa}
+@media(max-width:600px){.ii:nth-child(n+3){display:none}}
+#model-info{margin-left:auto;font-size:10px;color:#bbb;white-space:nowrap}
 
-#fab-group{position:fixed;right:12px;bottom:calc(var(--bottombar-h) + 12px);z-index:50;display:none;flex-direction:column;gap:8px}
-#fab-group.on{display:flex}
-.fab{width:44px;height:44px;border-radius:50%;background:var(--panel);border:1px solid var(--border);color:rgba(232,224,208,.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;backdrop-filter:blur(12px);user-select:none}
-.fab:active{background:rgba(201,168,76,.2);border-color:var(--gold);transform:scale(.93)}
-.fab.active{border-color:var(--gold);color:var(--gold)}
-
-#view-panel{position:fixed;left:12px;bottom:calc(var(--bottombar-h) + 12px);z-index:50;display:none;flex-direction:column;gap:6px}
+/* view buttons — left */
+#view-panel{position:fixed;left:10px;bottom:calc(var(--bottombar-h)+10px);z-index:50;display:none;flex-direction:column;gap:5px}
 #view-panel.on{display:flex}
-.vb{background:var(--panel);border:1px solid var(--border);border-radius:22px;color:rgba(232,224,208,.6);font-size:11px;letter-spacing:1px;padding:8px 16px;cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif;text-transform:uppercase;backdrop-filter:blur(12px);white-space:nowrap;min-height:36px;display:flex;align-items:center;justify-content:center}
-.vb:active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1)}
+.vb{background:#fff;border:1px solid var(--border);border-radius:4px;color:#666;font-size:11px;padding:7px 14px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;min-height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.vb:active{background:#f5f5f5;border-color:#aaa}
 
-#drawer-bg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.3);display:none}
+/* FAB — right */
+#fab-group{position:fixed;right:10px;bottom:calc(var(--bottombar-h)+10px);z-index:50;display:none;flex-direction:column;gap:7px}
+#fab-group.on{display:flex}
+.fab{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--border);color:#666;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08);user-select:none}
+.fab:active{background:#f0f0f0;transform:scale(.94)}
+.fab.active{border-color:#333;color:#333;background:#f5f5f5}
+
+/* drawer */
+#drawer-bg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.15);display:none}
 #drawer-bg.on{display:block}
-#settings-drawer{position:fixed;right:0;top:var(--topbar-h);bottom:var(--bottombar-h);z-index:60;width:200px;background:var(--panel);border-left:1px solid var(--border);display:none;flex-direction:column;backdrop-filter:blur(16px);transform:translateX(100%);transition:transform .25s ease;overflow-y:auto}
+#settings-drawer{position:fixed;right:0;top:var(--topbar-h);bottom:var(--bottombar-h);z-index:60;width:180px;background:#fff;border-left:1px solid var(--border);display:none;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;overflow-y:auto}
 #settings-drawer.open{display:flex;transform:translateX(0)}
-.dr-section{padding:14px 16px 8px}
-.dr-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.dr-btn{width:100%;background:transparent;border:1px solid rgba(201,168,76,.18);border-radius:6px;color:rgba(232,224,208,.7);font-size:13px;padding:10px 12px;cursor:pointer;text-align:left;transition:all .15s;font-family:'Noto Sans TC',sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:8px;min-height:42px}
-.dr-btn:active{border-color:var(--gold);color:var(--warm);background:rgba(201,168,76,.1)}
-.dr-sep{height:1px;background:rgba(201,168,76,.12);margin:4px 16px}
+.dr-sec{padding:12px 14px 6px}
+.dr-lbl{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;margin-bottom:7px}
+.dr-btn{width:100%;background:transparent;border:1px solid #eee;border-radius:4px;color:#555;font-size:12px;padding:9px 11px;cursor:pointer;text-align:left;font-family:'Noto Sans TC',sans-serif;margin-bottom:5px;min-height:38px;display:flex;align-items:center;gap:7px}
+.dr-btn:active{background:#f5f5f5;border-color:#ccc}
+.dr-sep{height:1px;background:#f0f0f0;margin:4px 14px}
 
 /* ── Upload overlay ── */
-#drop-overlay{position:fixed;inset:0;z-index:200;background:rgba(10,9,7,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;overflow-y:auto;padding:70px 16px 20px;transition:opacity .3s ease}
+#drop-overlay{position:fixed;inset:0;z-index:200;background:rgba(245,242,238,0.98);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow-y:auto;padding:60px 16px 20px;transition:opacity .3s}
 #drop-overlay.hidden{opacity:0;pointer-events:none}
 
-.upload-card{width:min(520px,100%);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:22px 20px;display:flex;flex-direction:column;gap:14px}
-.card-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--warm)}
-.card-desc{font-size:12px;color:rgba(232,224,208,.5);line-height:1.8}
-.card-desc b{color:var(--gold);font-weight:500}
+.upload-card{width:min(500px,100%);background:#fff;border:1px solid var(--border);border-radius:8px;padding:22px 20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card-title{font-size:18px;font-weight:500;color:#222;letter-spacing:.5px}
+.card-desc{font-size:12px;color:#888;line-height:1.8}
+.card-desc b{color:#444;font-weight:500}
 
-/* big folder drop zone */
-.folder-zone{border:2px dashed rgba(201,168,76,.35);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:rgba(201,168,76,.03)}
+.folder-zone{border:2px dashed #ddd;border-radius:8px;padding:24px 20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:#fafafa}
 .folder-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.folder-zone:hover,.folder-zone.over{border-color:var(--gold);background:rgba(201,168,76,.07)}
-.fz-icon{font-size:36px;margin-bottom:10px}
-.fz-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--warm);margin-bottom:6px}
-.fz-sub{font-size:12px;color:rgba(232,224,208,.45);line-height:1.7}
-.fz-sub b{color:var(--gold);font-weight:500}
+.folder-zone:hover,.folder-zone.over{border-color:#888;background:#f5f5f5}
+.fz-icon{font-size:32px;margin-bottom:10px}
+.fz-title{font-size:16px;font-weight:500;color:#333;margin-bottom:5px}
+.fz-sub{font-size:12px;color:#888;line-height:1.7}
+.fz-sub b{color:#555;font-weight:500}
 
-/* OR divider */
-.or-row{display:flex;align-items:center;gap:10px;color:rgba(232,224,208,.25);font-size:11px}
-.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.12)}
+.or-row{display:flex;align-items:center;gap:10px;color:#ccc;font-size:11px}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:#eee}
 
-/* manual file slots */
-.file-slots{display:flex;flex-direction:column;gap:8px}
-.file-slot{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(201,168,76,.15);border-radius:8px;background:rgba(255,255,255,.02);transition:border-color .2s}
-.file-slot.ready{border-color:rgba(76,175,80,.4);background:rgba(76,175,80,.04)}
+.file-slots{display:flex;flex-direction:column;gap:7px}
+.file-slot{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #eee;border-radius:6px;background:#fafafa;transition:border-color .2s}
+.file-slot.ready{border-color:#b2dfb2;background:#f5fbf5}
 .slot-left{flex:1;min-width:0}
-.slot-tags{display:flex;gap:5px;margin-bottom:4px;flex-wrap:wrap}
-.slot-tag{padding:2px 7px;border:1px solid var(--border);border-radius:3px;font-size:10px;color:var(--gold);font-family:monospace}
-.slot-tag.req{border-color:rgba(230,0,18,.35);color:#ff8080}
-.slot-filename{font-size:12px;color:var(--warm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.slot-hint{font-size:11px;color:rgba(232,224,208,.3);margin-top:2px}
-.slot-status{font-size:15px;margin-left:4px;flex-shrink:0}
+.slot-tags{display:flex;gap:5px;margin-bottom:4px}
+.slot-tag{padding:1px 6px;border:1px solid #ddd;border-radius:3px;font-size:10px;color:#888;font-family:monospace}
+.slot-tag.req{border-color:#ffaaaa;color:#e05050}
+.slot-filename{font-size:12px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slot-hint{font-size:11px;color:#bbb;margin-top:2px}
+.slot-status{font-size:14px;flex-shrink:0;margin-left:4px}
 .slot-btn{flex-shrink:0;position:relative;overflow:hidden}
-.slot-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;width:100%;height:100%}
-.slot-btn-inner{padding:8px 12px;border:1px solid rgba(201,168,76,.3);border-radius:6px;font-size:12px;color:rgba(232,224,208,.6);cursor:pointer;white-space:nowrap;display:flex;align-items:center;min-height:36px}
+.slot-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.slot-btn-inner{padding:7px 12px;border:1px solid #ddd;border-radius:5px;font-size:12px;color:#666;cursor:pointer;white-space:nowrap;display:flex;align-items:center;min-height:34px;background:#fff}
+.slot-btn:active .slot-btn-inner{background:#f0f0f0}
 
-/* texture count badge */
-.tex-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:6px;font-size:12px;color:rgba(232,224,208,.6)}
-.tex-badge b{color:var(--gold);font-weight:500}
+#folder-status{display:none}
+.folder-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#f5f5f5;border:1px solid #eee;border-radius:5px;font-size:12px;color:#666}
+.folder-badge b{color:#333;font-weight:500}
 
-.load-btn{padding:14px;background:rgba(201,168,76,.12);border:1px solid var(--gold);border-radius:8px;color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;cursor:pointer;transition:background .2s;width:100%;min-height:50px}
-.load-btn:active:not(:disabled){background:rgba(201,168,76,.25)}
-.load-btn:disabled{opacity:.3;cursor:not-allowed}
+.load-btn{padding:13px;background:#333;border:none;border-radius:6px;color:#fff;font-size:15px;font-weight:500;letter-spacing:1px;cursor:pointer;width:100%;min-height:48px;font-family:'Noto Sans TC',sans-serif;transition:background .15s}
+.load-btn:active:not(:disabled){background:#111}
+.load-btn:disabled{background:#ccc;cursor:not-allowed}
 
-.tip{width:min(520px,100%);background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.16);border-radius:8px;padding:14px 16px;font-size:11px;color:rgba(232,224,208,.5);line-height:1.9}
-.tip b{color:var(--gold);font-weight:500}
-.tip code{background:rgba(201,168,76,.12);padding:1px 6px;border-radius:3px;font-size:11px;color:var(--gold);font-family:monospace}
+.tip{width:min(500px,100%);background:#fff;border:1px solid #eee;border-radius:6px;padding:12px 16px;font-size:11px;color:#999;line-height:1.9}
+.tip b{color:#555;font-weight:500}
+.tip code{background:#f5f5f5;padding:1px 5px;border-radius:3px;font-size:11px;color:#555;font-family:monospace}
 
-#loading{position:fixed;inset:0;z-index:300;background:rgba(10,9,7,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+/* loading */
+#loading{position:fixed;inset:0;z-index:300;background:rgba(245,242,238,.95);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px}
 #loading.on{display:flex}
-.lt{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--warm)}
-.pb{width:min(260px,70vw);height:2px;background:rgba(201,168,76,.18);border-radius:1px;overflow:hidden}
-.pf{height:100%;background:var(--gold);width:0%;transition:width .25s ease;border-radius:1px}
-.lp{font-size:11px;color:var(--gold);letter-spacing:2px}
-#load-status{font-size:12px;color:rgba(232,224,208,.4);max-width:300px;text-align:center}
+.lt{font-size:16px;font-weight:500;color:#333}
+.pb{width:min(240px,65vw);height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden}
+.pf{height:100%;background:#333;width:0%;transition:width .25s ease;border-radius:2px}
+.lp{font-size:11px;color:#999;letter-spacing:1px}
+#load-status{font-size:12px;color:#aaa;max-width:280px;text-align:center}
 
-#toast{position:fixed;bottom:calc(var(--bottombar-h) + 12px);left:50%;transform:translateX(-50%);background:rgba(20,18,16,.95);border:1px solid rgba(230,0,18,.35);color:#ff8080;padding:10px 20px;border-radius:6px;font-size:12px;z-index:500;display:none;max-width:min(400px,85vw);text-align:center;backdrop-filter:blur(12px)}
+/* toast */
+#toast{position:fixed;bottom:calc(var(--bottombar-h)+12px);left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 18px;border-radius:5px;font-size:12px;z-index:500;display:none;max-width:min(380px,85vw);text-align:center}
 #toast.on{display:block}
 </style>
 </head>
@@ -122,7 +128,7 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
 
 <div id="topbar">
   <div class="logo">3D Viewer</div>
-  <div class="divider"></div>
+  <div class="div"></div>
   <div id="filename-display">尚未載入模型</div>
   <div id="status-badge">等待載入</div>
 </div>
@@ -130,12 +136,10 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
 <div id="canvas-wrap"><canvas id="three-canvas"></canvas></div>
 
 <div id="bottombar">
-  <div class="hint-row">
-    <div class="ii"><span class="ik">拖曳</span>旋轉</div>
-    <div class="ii"><span class="ik">右鍵</span>平移</div>
-    <div class="ii"><span class="ik">滾輪</span>縮放</div>
-    <div class="ii"><span class="ik">雙擊</span>對焦</div>
-  </div>
+  <div class="ii"><span class="ik">拖曳</span>旋轉</div>
+  <div class="ii"><span class="ik">右鍵</span>平移</div>
+  <div class="ii"><span class="ik">滾輪</span>縮放</div>
+  <div class="ii"><span class="ik">雙擊</span>對焦</div>
   <div id="model-info"></div>
 </div>
 
@@ -148,23 +152,23 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
 </div>
 
 <div id="fab-group">
-  <div class="fab" onclick="toggleDrawer()">⚙</div>
-  <div class="fab" id="fab-rotate" onclick="toggleAutoRotate()">◎</div>
-  <div class="fab" onclick="resetCamera()">⟳</div>
-  <div class="fab" onclick="unloadModel()">↑</div>
+  <div class="fab" onclick="toggleDrawer()" title="設定">⚙</div>
+  <div class="fab" id="fab-rotate" onclick="toggleAutoRotate()" title="自動旋轉">◎</div>
+  <div class="fab" onclick="resetCamera()" title="重置視角">⟳</div>
+  <div class="fab" onclick="unloadModel()" title="換檔案">↑</div>
 </div>
 
 <div id="drawer-bg" onclick="closeDrawer()"></div>
 <div id="settings-drawer">
-  <div class="dr-section">
-    <div class="dr-label">背景</div>
-    <button class="dr-btn" onclick="setBg('dark');closeDrawer()">● 深色</button>
-    <button class="dr-btn" onclick="setBg('light');closeDrawer()">○ 淺色</button>
-    <button class="dr-btn" onclick="setBg('studio');closeDrawer()">◈ 工作室</button>
+  <div class="dr-sec">
+    <div class="dr-lbl">背景</div>
+    <button class="dr-btn" onclick="setBg('#f0ece4');closeDrawer()">● 米白（預設）</button>
+    <button class="dr-btn" onclick="setBg('#ffffff');closeDrawer()">○ 純白</button>
+    <button class="dr-btn" onclick="setBg('#e8e8e8');closeDrawer()">◌ 淺灰</button>
   </div>
   <div class="dr-sep"></div>
-  <div class="dr-section">
-    <div class="dr-label">顯示</div>
+  <div class="dr-sec">
+    <div class="dr-lbl">顯示</div>
     <button class="dr-btn" onclick="toggleWireframe();closeDrawer()">⊞ 線框模式</button>
   </div>
 </div>
@@ -174,34 +178,24 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
   <div class="upload-card">
     <div>
       <div class="card-title">上傳 3D 模型</div>
-      <div class="card-desc" style="margin-top:6px">
-        最簡單：直接把 SketchUp 匯出的<b>整個資料夾</b>拖進來，<br>
-        貼圖、顏色全部自動對應
+      <div class="card-desc" style="margin-top:5px">
+        將 SketchUp 匯出的<b>整個資料夾</b>拖進來，貼圖自動對應
       </div>
     </div>
 
-    <!-- Folder drop zone -->
     <div class="folder-zone" id="folder-zone">
       <input type="file" id="input-folder" webkitdirectory multiple />
       <div class="fz-icon">📁</div>
       <div class="fz-title">拖曳整個資料夾至此</div>
-      <div class="fz-sub">
-        或點擊選取資料夾<br>
-        <b>OBJ + MTL + 所有貼圖</b>一次搞定
-      </div>
+      <div class="fz-sub">或點擊選取資料夾<br><b>OBJ + MTL + 所有貼圖</b>一次搞定</div>
     </div>
 
-    <!-- texture/file count display -->
-    <div id="folder-status" style="display:none">
-      <div class="tex-badge">
-        <span>📦</span>
-        <span id="folder-summary">偵測到 0 個檔案</span>
-      </div>
+    <div id="folder-status">
+      <div class="folder-badge">📦 <span id="folder-summary">偵測中…</span></div>
     </div>
 
     <div class="or-row">或分別選取</div>
 
-    <!-- Manual slots -->
     <div class="file-slots">
       <div class="file-slot" id="slot-obj">
         <div class="slot-left">
@@ -214,7 +208,7 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
       </div>
       <div class="file-slot" id="slot-mtl">
         <div class="slot-left">
-          <div class="slot-tags"><span class="slot-tag" style="color:rgba(201,168,76,.5)">可選</span><span class="slot-tag">.MTL</span></div>
+          <div class="slot-tags"><span class="slot-tag">可選</span><span class="slot-tag">.MTL</span></div>
           <div class="slot-filename" id="mtl-filename">尚未選取</div>
           <div class="slot-hint">材質顏色</div>
         </div>
@@ -223,12 +217,12 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
       </div>
       <div class="file-slot" id="slot-tex">
         <div class="slot-left">
-          <div class="slot-tags"><span class="slot-tag" style="color:rgba(201,168,76,.5)">可選</span><span class="slot-tag">.JPG/.PNG</span></div>
+          <div class="slot-tags"><span class="slot-tag">可選</span><span class="slot-tag">.JPG/.PNG</span></div>
           <div class="slot-filename" id="tex-filename">尚未選取</div>
-          <div class="slot-hint">貼圖檔案（可多選）</div>
+          <div class="slot-hint">貼圖（可多選）</div>
         </div>
         <div class="slot-status" id="tex-status">—</div>
-        <div class="slot-btn"><input type="file" accept=".jpg,.jpeg,.png,.bmp,.gif,.tga,.webp" multiple id="input-tex"/><div class="slot-btn-inner">選取</div></div>
+        <div class="slot-btn"><input type="file" accept=".jpg,.jpeg,.png,.bmp,.webp" multiple id="input-tex"/><div class="slot-btn-inner">選取</div></div>
       </div>
     </div>
 
@@ -236,12 +230,14 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
   </div>
 
   <div class="tip">
-    <b>推薦做法：</b> SketchUp 匯出後，把整個含有 <code>.obj</code> <code>.mtl</code> 和貼圖資料夾的<b>整個資料夾</b>直接拖進上方框框，所有顏色和材質都會正確顯示
+    <b>SketchUp 匯出步驟：</b><br>
+    檔案 → 匯出 → 3D 模型 → 格式選 <code>.obj</code><br>
+    匯出後把整個資料夾（含 .obj .mtl 和貼圖）拖進上方框
   </div>
 </div>
 
 <div id="loading">
-  <div class="lt">載入模型中…</div>
+  <div class="lt">載入中…</div>
   <div class="pb"><div class="pf" id="pf"></div></div>
   <div class="lp" id="lp">0%</div>
   <div id="load-status"></div>
@@ -250,131 +246,124 @@ html,body{width:100%;height:100%;background:#0d0c0a;font-family:'Noto Sans TC',s
 <div id="toast"></div>
 
 <script>
-// ── Three.js ─────────────────────────────────────────────────
+// ── Three.js — NO tone mapping, NO shadows, flat lighting ─────
 const canvas = document.getElementById('three-canvas');
 const wrap   = document.getElementById('canvas-wrap');
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+// NO tone mapping — keep colors exactly as in the texture files
+renderer.toneMapping = THREE.NoToneMapping;
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+// NO shadow map
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x141210);
-const camera = new THREE.PerspectiveCamera(45,1,0.01,2000);
-camera.position.set(5,3,7);
-const controls = new THREE.OrbitControls(camera,canvas);
-controls.enableDamping=true; controls.dampingFactor=0.06;
-controls.minDistance=0.2; controls.maxDistance=300;
-controls.touches={ONE:THREE.TOUCH.ROTATE,TWO:THREE.TOUCH.DOLLY_PAN};
+scene.background = new THREE.Color(0xf0ece4);
 
-scene.add(new THREE.AmbientLight(0xfff8f0,0.65));
-const sun=new THREE.DirectionalLight(0xfff5e4,2.0);
-sun.position.set(8,12,6); sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.left=-15;sun.shadow.camera.right=15;
-sun.shadow.camera.top=15;sun.shadow.camera.bottom=-15;
-sun.shadow.bias=-0.001; scene.add(sun);
-const fill=new THREE.DirectionalLight(0xe0eeff,0.45); fill.position.set(-6,4,-4); scene.add(fill);
-const rim=new THREE.DirectionalLight(0xffe8c0,0.28); rim.position.set(0,-2,-8); scene.add(rim);
-scene.add(new THREE.GridHelper(30,50,0x2a2620,0x1e1c18));
-const sf=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.ShadowMaterial({opacity:.3}));
-sf.rotation.x=-Math.PI/2; sf.receiveShadow=true; scene.add(sf);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 2000);
+camera.position.set(5, 3, 7);
 
-function resize(){renderer.setSize(wrap.clientWidth,wrap.clientHeight);camera.aspect=wrap.clientWidth/wrap.clientHeight;camera.updateProjectionMatrix();}
-resize(); window.addEventListener('resize',resize);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.07;
+controls.minDistance = 0.2;
+controls.maxDistance = 300;
+controls.touches = {ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN};
 
-let autoRot=false,wireMod=false,loadedModel=null;
-(function anim(){requestAnimationFrame(anim);if(autoRot&&loadedModel)loadedModel.rotation.y+=0.003;controls.update();renderer.render(scene,camera);})();
+// ── Lighting: flat/even, no dramatic shadows ──────────────────
+// Use a single very bright ambient + weak directional to approximate
+// SketchUp's default flat shading look
+scene.add(new THREE.AmbientLight(0xffffff, 1.0));
+// Soft directional from top-front — just enough to show 3D form
+const d1 = new THREE.DirectionalLight(0xffffff, 0.35);
+d1.position.set(1, 2, 2); scene.add(d1);
+const d2 = new THREE.DirectionalLight(0xffffff, 0.2);
+d2.position.set(-1, 1, -1); scene.add(d2);
 
-// ── UI refs ───────────────────────────────────────────────────
-const overlay=document.getElementById('drop-overlay');
-const loadingEl=document.getElementById('loading');
-const pfEl=document.getElementById('pf'); const lpEl=document.getElementById('lp');
-const loadStatusEl=document.getElementById('load-status');
-const filenameEl=document.getElementById('filename-display');
-const badgeEl=document.getElementById('status-badge');
-const modelInfoEl=document.getElementById('model-info');
-const toastEl=document.getElementById('toast');
-const loadBtn=document.getElementById('load-btn');
-const fabGroup=document.getElementById('fab-group');
-const viewPanel=document.getElementById('view-panel');
+// NO grid, NO ground plane
+
+function resize(){
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+  camera.aspect = wrap.clientWidth / wrap.clientHeight;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+let autoRot=false, wireMod=false, loadedModel=null;
+(function anim(){
+  requestAnimationFrame(anim);
+  if(autoRot && loadedModel) loadedModel.rotation.y += 0.003;
+  controls.update();
+  renderer.render(scene, camera);
+})();
+
+// ── UI ────────────────────────────────────────────────────────
+const overlay     = document.getElementById('drop-overlay');
+const loadingEl   = document.getElementById('loading');
+const pfEl        = document.getElementById('pf');
+const lpEl        = document.getElementById('lp');
+const loadStEl    = document.getElementById('load-status');
+const filenameEl  = document.getElementById('filename-display');
+const badgeEl     = document.getElementById('status-badge');
+const modelInfoEl = document.getElementById('model-info');
+const toastEl     = document.getElementById('toast');
+const loadBtn     = document.getElementById('load-btn');
+const fabGroup    = document.getElementById('fab-group');
+const viewPanel   = document.getElementById('view-panel');
 
 function showToast(msg){toastEl.textContent=msg;toastEl.classList.add('on');setTimeout(()=>toastEl.classList.remove('on'),5000);}
-function setPct(p,msg){pfEl.style.width=p+'%';lpEl.textContent=Math.round(p)+'%';if(msg)loadStatusEl.textContent=msg;}
+function setPct(p,msg){pfEl.style.width=p+'%';lpEl.textContent=Math.round(p)+'%';if(msg)loadStEl.textContent=msg;}
 
 // ── File state ────────────────────────────────────────────────
-// textureMap: filename (lowercase) → dataURL
 let fileObj=null, fileMtl=null, fileGlb=null;
-let textureMap={}; // key: filename.toLowerCase(), value: dataURL
+let textureMap={};
 
-function readFileAsText(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsText(f);});}
-function readFileAsBuf(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsArrayBuffer(f);});}
-function readFileAsDataURL(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=e=>res(e.target.result);fr.onerror=rej;fr.readAsDataURL(f);});}
+const IMG_EXT=['.jpg','.jpeg','.png','.bmp','.gif','.webp'];
+const isImg=n=>IMG_EXT.some(e=>n.toLowerCase().endsWith(e));
 
-const IMG_EXT=['.jpg','.jpeg','.png','.bmp','.gif','.webp','.tga'];
-function isImage(name){return IMG_EXT.some(e=>name.toLowerCase().endsWith(e));}
+function readText(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(f);});}
+function readBuf(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsArrayBuffer(f);});}
+function readDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(f);});}
 
 async function addTextures(files){
-  const imgs=Array.from(files).filter(f=>isImage(f.name));
+  const imgs=Array.from(files).filter(f=>isImg(f.name));
   for(const f of imgs){
-    const dataUrl=await readFileAsDataURL(f);
-    textureMap[f.name.toLowerCase()]=dataUrl;
-    // also store without path prefix
-    const base=f.name.split('/').pop().split('\\').pop();
-    textureMap[base.toLowerCase()]=dataUrl;
+    const url=await readDataURL(f);
+    const key=f.name.toLowerCase();
+    const base=key.split('/').pop().split('\\').pop();
+    textureMap[key]=url; textureMap[base]=url;
   }
   return imgs.length;
 }
 
 function updateUI(){
-  const sObj=document.getElementById('slot-obj');
-  const oFn=document.getElementById('obj-filename');
-  const oSt=document.getElementById('obj-status');
-  const sMtl=document.getElementById('slot-mtl');
-  const mFn=document.getElementById('mtl-filename');
-  const mSt=document.getElementById('mtl-status');
-  const sTex=document.getElementById('slot-tex');
-  const tFn=document.getElementById('tex-filename');
-  const tSt=document.getElementById('tex-status');
-
-  if(fileGlb){
-    oFn.textContent=fileGlb.name; oSt.textContent='✓'; oSt.style.color='#4CAF50'; sObj.classList.add('ready');
-    mFn.textContent='（GLB 已內含）'; mSt.textContent='—'; sMtl.classList.remove('ready');
-    tFn.textContent='（GLB 已內含）'; tSt.textContent='—'; sTex.classList.remove('ready');
-    loadBtn.disabled=false; return;
-  }
+  const sObj=document.getElementById('slot-obj'), oFn=document.getElementById('obj-filename'), oSt=document.getElementById('obj-status');
+  const sMtl=document.getElementById('slot-mtl'), mFn=document.getElementById('mtl-filename'), mSt=document.getElementById('mtl-status');
+  const sTex=document.getElementById('slot-tex'), tFn=document.getElementById('tex-filename'), tSt=document.getElementById('tex-status');
+  if(fileGlb){oFn.textContent=fileGlb.name;oSt.textContent='✓';oSt.style.color='#4CAF50';sObj.classList.add('ready');mFn.textContent='GLB已內含';sMtl.classList.remove('ready');tFn.textContent='GLB已內含';sTex.classList.remove('ready');loadBtn.disabled=false;return;}
   if(fileObj){oFn.textContent=fileObj.name;oSt.textContent='✓';oSt.style.color='#4CAF50';sObj.classList.add('ready');loadBtn.disabled=false;}
   else{oFn.textContent='尚未選取';oSt.textContent='⊙';oSt.style.color='';sObj.classList.remove('ready');loadBtn.disabled=true;}
   if(fileMtl){mFn.textContent=fileMtl.name;mSt.textContent='✓';mSt.style.color='#4CAF50';sMtl.classList.add('ready');}
   else{mFn.textContent='尚未選取';mSt.textContent='—';mSt.style.color='';sMtl.classList.remove('ready');}
-  const tc=Object.keys(textureMap).length;
-  if(tc>0){tFn.textContent=Math.ceil(tc/2)+' 個貼圖已載入';tSt.textContent='✓';tSt.style.color='#4CAF50';sTex.classList.add('ready');}
+  const tc=Object.keys(textureMap).length/2;
+  if(tc>0){tFn.textContent=Math.ceil(tc)+' 個貼圖';tSt.textContent='✓';tSt.style.color='#4CAF50';sTex.classList.add('ready');}
   else{tFn.textContent='尚未選取';tSt.textContent='—';tSt.style.color='';sTex.classList.remove('ready');}
 }
 
 async function registerFolder(files){
   const all=Array.from(files);
-  fileGlb=null; // folder mode = OBJ
-  // find obj & mtl
-  const objFile=all.find(f=>f.name.toLowerCase().endsWith('.obj'));
-  const mtlFile=all.find(f=>f.name.toLowerCase().endsWith('.mtl'));
-  const glbFile=all.find(f=>f.name.toLowerCase().endsWith('.glb')||f.name.toLowerCase().endsWith('.gltf'));
-  if(glbFile){fileGlb=glbFile;fileObj=null;fileMtl=null;textureMap={};}
-  else{
-    if(objFile)fileObj=objFile;
-    if(mtlFile)fileMtl=mtlFile;
-  }
-  const imgCount=await addTextures(all);
-  // update summary
-  const summary=document.getElementById('folder-summary');
+  const objF=all.find(f=>f.name.toLowerCase().endsWith('.obj'));
+  const mtlF=all.find(f=>f.name.toLowerCase().endsWith('.mtl'));
+  const glbF=all.find(f=>['.glb','.gltf'].some(e=>f.name.toLowerCase().endsWith(e)));
+  if(glbF){fileGlb=glbF;fileObj=null;fileMtl=null;textureMap={};}
+  else{if(objF)fileObj=objF;if(mtlF)fileMtl=mtlF;}
+  const imgCnt=await addTextures(all);
   const parts=[];
-  if(fileGlb)parts.push('1 個 GLB');
+  if(fileGlb)parts.push('GLB ✓');
   else{if(fileObj)parts.push('OBJ ✓');if(fileMtl)parts.push('MTL ✓');}
-  if(imgCount>0)parts.push(imgCount+' 個貼圖');
-  summary.innerHTML='<b>'+parts.join(' &nbsp;·&nbsp; ')+'</b>';
+  if(imgCnt>0)parts.push(imgCnt+' 張貼圖');
+  document.getElementById('folder-summary').innerHTML='<b>'+parts.join(' · ')+'</b>';
   document.getElementById('folder-status').style.display='block';
   updateUI();
 }
@@ -385,71 +374,52 @@ function registerFiles(files){
     if(n.endsWith('.glb')||n.endsWith('.gltf')){fileGlb=f;fileObj=null;fileMtl=null;textureMap={};}
     else if(n.endsWith('.obj')){fileObj=f;fileGlb=null;}
     else if(n.endsWith('.mtl')){fileMtl=f;fileGlb=null;}
-    else if(isImage(n)){
-      const dataUrl=await readFileAsDataURL(f);
-      textureMap[n]=dataUrl;
-      const base=f.name.split('/').pop().split('\\').pop();
-      textureMap[base.toLowerCase()]=dataUrl;
-    }
+    else if(isImg(n)){const u=await readDataURL(f);textureMap[n]=u;textureMap[n.split('/').pop()]=u;}
     updateUI();
   });
 }
 
-// folder input
 document.getElementById('input-folder').addEventListener('change',e=>registerFolder(e.target.files));
-// individual inputs
 document.getElementById('input-obj').addEventListener('change',e=>{if(e.target.files[0]){fileObj=e.target.files[0];fileGlb=null;updateUI();}});
 document.getElementById('input-mtl').addEventListener('change',e=>{if(e.target.files[0]){fileMtl=e.target.files[0];fileGlb=null;updateUI();}});
-document.getElementById('input-tex').addEventListener('change',async e=>{
-  const cnt=await addTextures(e.target.files); updateUI();
-  if(cnt>0)showToast('已載入 '+cnt+' 個貼圖');
-});
+document.getElementById('input-tex').addEventListener('change',async e=>{await addTextures(e.target.files);updateUI();});
 
-// drag onto folder zone
 const fz=document.getElementById('folder-zone');
 ['dragenter','dragover'].forEach(ev=>fz.addEventListener(ev,e=>{e.preventDefault();fz.classList.add('over');}));
 ['dragleave','drop'].forEach(ev=>fz.addEventListener(ev,e=>{e.preventDefault();fz.classList.remove('over');}));
-fz.addEventListener('drop',e=>{
-  e.preventDefault();
-  // dataTransfer.items gives us access to folder contents in some browsers
-  const files=e.dataTransfer.files;
-  if(files.length>0) registerFolder(files);
-});
-
+fz.addEventListener('drop',e=>{registerFolder(e.dataTransfer.files);});
 wrap.addEventListener('dragover',e=>e.preventDefault());
 wrap.addEventListener('drop',e=>{e.preventDefault();registerFolder(e.dataTransfer.files);});
 
-// ── Custom texture loader manager ─────────────────────────────
-// Intercepts texture URL requests and serves from our textureMap
+// ── Texture manager ───────────────────────────────────────────
 function makeManager(){
-  const mgr=new THREE.LoadingManager();
-  mgr.setURLModifier(url=>{
-    // extract just the filename
+  const m=new THREE.LoadingManager();
+  m.setURLModifier(url=>{
     const parts=url.split(/[/\\]/);
-    const base=parts[parts.length-1].toLowerCase();
-    // also try decoding URI
-    const decoded=decodeURIComponent(base);
-    if(textureMap[decoded]) return textureMap[decoded];
+    const base=decodeURIComponent(parts[parts.length-1]).toLowerCase();
     if(textureMap[base]) return textureMap[base];
-    // try without extension mismatch (jpg vs jpeg)
-    for(const key of Object.keys(textureMap)){
-      if(key.replace(/\.[^.]+$/,'')===base.replace(/\.[^.]+$/,'')) return textureMap[key];
-    }
-    console.warn('Texture not found in map:',base);
-    return url; // fallback
+    // fuzzy match: same name different extension
+    const stem=base.replace(/\.[^.]+$/,'');
+    for(const k of Object.keys(textureMap)){if(k.replace(/\.[^.]+$/,'')=== stem) return textureMap[k];}
+    return url;
   });
-  return mgr;
+  return m;
 }
 
-function placeModel(obj,name){
+// ── Place model ───────────────────────────────────────────────
+function placeModel(obj, name){
   if(loadedModel){scene.remove(loadedModel);loadedModel=null;}
   const box=new THREE.Box3().setFromObject(obj);
   const size=box.getSize(new THREE.Vector3());
   obj.scale.setScalar(4.0/Math.max(size.x,size.y,size.z));
   const box2=new THREE.Box3().setFromObject(obj);
-  const c2=box2.getCenter(new THREE.Vector3());
-  obj.position.sub(c2); obj.position.y-=box2.min.y;
-  obj.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+  obj.position.sub(box2.getCenter(new THREE.Vector3()));
+  obj.position.y -= box2.min.y / obj.scale.y * obj.scale.y; // sit on ground
+  // re-center after scale
+  const box3=new THREE.Box3().setFromObject(obj);
+  obj.position.y -= box3.min.y;
+
+  // NO shadows, but keep material as-is
   scene.add(obj); loadedModel=obj;
   let mn=0,vn=0;
   obj.traverse(c=>{if(c.isMesh){mn++;if(c.geometry.attributes.position)vn+=c.geometry.attributes.position.count;}});
@@ -467,64 +437,47 @@ async function startLoad(){
   try{
     if(fileGlb){
       setPct(20,'讀取 GLB…');
-      const buf=await readFileAsBuf(fileGlb); setPct(60,'解析模型…');
-      const mgr=makeManager();
-      const loader=new THREE.GLTFLoader(mgr);
-      loader.parse(buf,'',gltf=>{setPct(100,'完成');placeModel(gltf.scene,fileGlb.name);},
-        err=>{loadingEl.classList.remove('on');showToast('GLB 解析失敗：'+(err.message||'未知'));});
+      const buf=await readBuf(fileGlb); setPct(60,'解析中…');
+      new THREE.GLTFLoader(makeManager()).parse(buf,'',gltf=>{setPct(100);placeModel(gltf.scene,fileGlb.name);},
+        err=>{loadingEl.classList.remove('on');showToast('GLB 失敗：'+(err.message||'未知'));});
       return;
     }
     if(fileObj){
-      let materials=null;
+      let mats=null;
       if(fileMtl){
-        setPct(15,'讀取材質…');
-        const mtlText=await readFileAsText(fileMtl);
-        setPct(30,'解析材質…');
-        const mgr=makeManager();
-        const ml=new THREE.MTLLoader(mgr);
+        setPct(15,'讀取 MTL…');
+        const mtlText=await readText(fileMtl); setPct(30,'解析材質…');
+        const ml=new THREE.MTLLoader(makeManager());
         ml.setResourcePath('');
-        const mtlBlob=new Blob([mtlText],{type:'text/plain'});
-        const mtlUrl=URL.createObjectURL(mtlBlob);
-        await new Promise(res=>{
-          ml.load(mtlUrl,mats=>{
-            mats.preload();
-            materials=mats;
-            URL.revokeObjectURL(mtlUrl);
-            res();
-          },null,()=>{URL.revokeObjectURL(mtlUrl);res();});
-        });
-        setPct(55,'材質載入完成');
+        const mUrl=URL.createObjectURL(new Blob([mtlText],{type:'text/plain'}));
+        await new Promise(res=>{ml.load(mUrl,m=>{m.preload();mats=m;URL.revokeObjectURL(mUrl);res();},null,()=>{URL.revokeObjectURL(mUrl);res();});});
+        setPct(55,'材質完成');
       }
       setPct(60,'讀取模型…');
-      const objText=await readFileAsText(fileObj);
-      const objBlob=new Blob([objText],{type:'text/plain'});
-      const objUrl=URL.createObjectURL(objBlob);
-      const mgr2=makeManager();
-      const ol=new THREE.OBJLoader(mgr2);
-      if(materials) ol.setMaterials(materials);
+      const objText=await readText(fileObj);
+      const oUrl=URL.createObjectURL(new Blob([objText],{type:'text/plain'}));
+      const ol=new THREE.OBJLoader(makeManager());
+      if(mats) ol.setMaterials(mats);
       await new Promise(res=>{
-        ol.load(objUrl,obj=>{
-          setPct(100,'完成！');
-          placeModel(obj,fileObj.name);
-          URL.revokeObjectURL(objUrl); res();
-        },xhr=>{if(xhr.total)setPct(60+xhr.loaded/xhr.total*38,'載入幾何…');},
-        err=>{loadingEl.classList.remove('on');showToast('OBJ 載入失敗：'+(err.message||'未知'));URL.revokeObjectURL(objUrl);res();});
+        ol.load(oUrl,obj=>{setPct(100,'完成');placeModel(obj,fileObj.name);URL.revokeObjectURL(oUrl);res();},
+          xhr=>{if(xhr.total)setPct(60+xhr.loaded/xhr.total*38,'載入中…');},
+          err=>{loadingEl.classList.remove('on');showToast('OBJ 失敗：'+(err.message||'未知'));URL.revokeObjectURL(oUrl);res();});
       });
     }
-  }catch(e){loadingEl.classList.remove('on');showToast('載入失敗：'+e.message);console.error(e);}
+  }catch(e){loadingEl.classList.remove('on');showToast('失敗：'+e.message);}
 }
 
-// ── Scene controls ────────────────────────────────────────────
+// ── Controls ─────────────────────────────────────────────────
 function resetCamera(){camera.position.set(5,3,7);controls.target.set(0,0,0);controls.update();}
 function toggleAutoRotate(){autoRot=!autoRot;document.getElementById('fab-rotate').classList.toggle('active',autoRot);}
-function setBg(m){scene.background=new THREE.Color({dark:0x141210,light:0xf0ece4,studio:0x232120}[m]);}
+function setBg(c){scene.background=new THREE.Color(c);wrap.style.background=c;}
 function toggleWireframe(){wireMod=!wireMod;if(loadedModel)loadedModel.traverse(c=>{if(c.isMesh)(Array.isArray(c.material)?c.material:[c.material]).forEach(m=>m.wireframe=wireMod);});}
 function unloadModel(){overlay.classList.remove('hidden');fabGroup.classList.remove('on');viewPanel.classList.remove('on');badgeEl.textContent='等待載入';badgeEl.classList.remove('loaded');filenameEl.textContent='尚未載入模型';modelInfoEl.textContent='';fileObj=fileMtl=fileGlb=null;textureMap={};updateUI();closeDrawer();}
+
 const VP={front:[[0,2,8],[0,0,0]],side:[[8,2,0],[0,0,0]],rear:[[0,2,-8],[0,0,0]],top:[[0,10,.01],[0,0,0]],iso:[[5,4,6],[0,0,0]]};
 function setView(p){if(!VP[p])return;camera.position.set(...VP[p][0]);controls.target.set(...VP[p][1]);controls.update();}
 
-const drawer=document.getElementById('settings-drawer');
-const drawerBg=document.getElementById('drawer-bg');
+const drawer=document.getElementById('settings-drawer'), drawerBg=document.getElementById('drawer-bg');
 function toggleDrawer(){const o=drawer.classList.toggle('open');drawerBg.classList.toggle('on',o);}
 function closeDrawer(){drawer.classList.remove('open');drawerBg.classList.remove('on');}
 
